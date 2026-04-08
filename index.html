@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport must be rigid for web apps handling their own touch gestures -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visual Universe (Resposive)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- Top Left HUD keeps the same for Desktop/Tablet, but scales down for Mobile -->
+    <div id="hud-top-left">
+        <div id="date-display">Simulation Time<br><span id="current-date"></span></div>
+    </div>
+
+    <!-- Center Bottom Controls (Desktop & Landscape Tablet) -->
+    <div id="bottom-panel" class="desktop-only">
+        <div id="time-controls" class="controls-panel">
+            <div class="panel-title">Time Control Panel</div>
+            <div class="controls">
+                <button id="btn-pause">⏸</button>
+                <div class="speed-slider-container">
+                    <span class="speed-label">Speed Normal</span>
+                    <button id="btn-rewind" title="Rewind">«</button>
+                    <button id="btn-fastforward" title="Fast Forward">»</button>
+                    <button id="btn-1x" class="hidden">1x</button>
+                    <button id="btn-10x" class="hidden">10x</button>
+                    <button id="btn-100x" class="hidden">100x</button>
+                    <button id="btn-1000x" class="hidden">1000x</button>
+                </div>
+            </div>
+        </div>
+        <div id="date-input-container" class="controls-panel">
+            <div class="panel-title">Date</div>
+            <input type="date" id="date-picker">
+        </div>
+    </div>
+    
+    <!-- Timeline & Events HUD on Top Right -->
+    <div id="timeline-panel" class="collapsible">
+        <div class="timeline-header">
+            Timeline & Events
+            <button class="toggle-collapse-btn" id="toggle-timeline">▼</button>
+        </div>
+        <div id="events-container">
+            <div id="events-list">
+                <!-- Events injected by JS -->
+            </div>
+            <div id="current-time-marker">
+                <span class="marker-text">Current</span> <span class="marker-arrow">➜</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hover details popup for Events (Desktop relies on hover, Mobile relies on tap to modal) -->
+    <div id="event-popup" class="hidden">
+        <img id="event-popup-img" src="" alt="Event visual">
+        <div class="popup-content">
+            <h4 id="event-popup-title">Title</h4>
+            <div id="event-popup-desc">Description</div>
+        </div>
+    </div>
+
+    <!-- Information Data Panel (Works as absolute window on Desktop, Swipe-up sheet on Mobile) -->
+    <div id="planet-info" class="hidden bottom-sheet">
+        <div class="drag-handle mobile-only"></div>
+        <div class="close-btn" id="close-info">&times;</div>
+        <h2 id="info-name">Planet Name</h2>
+        <div class="info-content-wrap">
+            <p><strong>Distance from Sun:</strong> <span id="info-distance"></span> AU</p>
+            <p><strong>Radius:</strong> <span id="info-radius"></span> Earth radii</p>
+            <p><strong>Orbital Period:</strong> <span id="info-period"></span> days</p>
+        </div>
+    </div>
+
+    <!-- MOBILE ENHANCEMENTS -->
+    <!-- Floating Action Button (Mobile Portrait Only) -->
+    <button id="mobile-fab" class="mobile-only">🕒</button>
+    
+    <!-- Mobile Controls Modal Overlay -->
+    <div id="mobile-controls-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <h3>Time Controls</h3>
+            <div class="controls stack">
+                <div class="speed-slider-container mobile-stack-flex">
+                    <button id="mob-btn-rewind">«</button>
+                    <button id="mob-btn-pause">⏸</button>
+                    <button id="mob-btn-fastforward">»</button>
+                </div>
+                <div class="modal-speed-display"><span class="speed-label mob-speed-label">Speed Normal</span></div>
+                
+                <hr class="modal-divider">
+                
+                <h3 style="margin-top:0;">Leap to Date</h3>
+                <input type="date" id="mob-date-picker" class="modal-input">
+            </div>
+            <button id="close-mobile-modal" class="modal-primary-btn">Done</button>
+        </div>
+    </div>
+
+    <!-- Include Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Include Custom JS -->
+    <script src="script.js"></script>
+</body>
+</html>
