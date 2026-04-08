@@ -18,8 +18,11 @@ let sunMesh, sunLight;
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 
-let activeTooltipObject = null; // Stored for 3D to 2D projection
+let activeTooltipObject = null; 
 let issSatRec = null; 
+
+// The strict Raycasting target array (Meshes only)
+const interactiveMeshes = [];
 
 let layers = {
     orbits: new THREE.Group(),
@@ -49,7 +52,7 @@ const planetsData = {
     Uranus: { nameKo: '천왕성', temp: '-195°C', rotPeriod: '-0.71일', a: 19.191, e: 0.0471, i: 0.769, L: 313.23, longPeri: 170.96, node: 74.00, period: 30685.4, radius: 4.00, color: 0xaaccff, layer: 'planets' },
     Neptune: { nameKo: '해왕성', temp: '-200°C', rotPeriod: '0.67일', a: 30.068, e: 0.0085, i: 1.769, L: -55.12, longPeri: 44.97, node: 131.72, period: 60189.0, radius: 3.88, color: 0x5b5ddf, layer: 'planets' },
     
-    Halley_Comet: { nameKo: '핼리 혜성', temp: '가변적', rotPeriod: '알 수 없음', a: 17.8, e: 0.967, i: 162.2, L: 0, longPeri: 170.0, node: 58.4, period: 27520, radius: 1.2, color: 0xcc88ff, isComet: true, layer: 'planets' },
+    Halley_Comet: { nameKo: '핼리 혜성', temp: '가변적', rotPeriod: '불명', a: 17.8, e: 0.967, i: 162.2, L: 0, longPeri: 170.0, node: 58.4, period: 27520, radius: 1.2, color: 0xcc88ff, isComet: true, layer: 'planets' },
     ISS: { nameKo: '국제우주정거장', temp: 'N/A', rotPeriod: 'N/A', a: 1.05, e: 0.001, i: 51.6, L: 50, longPeri: 0, node: 0, period: 365 * 0.95, radius: 0.5, color: 0x00ffff, isArtificial: true, layer: 'iss' }
 };
 
@@ -66,10 +69,8 @@ const spacecraftMissions = [
     }
 ];
 
-// Heavy 30+ Event Array Mapping
 let masterTimeline = [
     { date: '1957-10-04T12:00:00Z', type: 'human', targetSystem: 'Earth', title: '스푸트니크 1호 발사', desc: '인류 최초의 인공위성 (소련).' },
-    { date: '1958-01-31T00:00:00Z', type: 'human', targetSystem: 'Earth', title: '익스플로러 1호 발사', desc: '미국 최초의 인공위성.' },
     { date: '1961-04-12T09:07:00Z', type: 'human', targetSystem: 'Earth', title: '유리 가가린 우주비행', desc: '보스토크 1호 탑승, 인류 최초의 우주 비행사.' },
     { date: '1969-07-20T20:17:00Z', type: 'human', targetSystem: 'Moon', title: '아폴로 11호 달 착륙', desc: '닐 암스트롱과 버즈 올드린, 고요의 바다 착륙.' },
     { date: '1970-04-13T00:00:00Z', type: 'human', targetSystem: 'Moon', title: '아폴로 13호 사고', desc: '산소 탱크 폭발 후 무사 귀환.' },
@@ -111,6 +112,10 @@ async function bootstrap() {
 bootstrap();
 
 async function fetchISSTle() {
+    const staticIssTLE = `ISS (ZARYA)
+1 25544U 98067A   23297.52500000  .00010000  00000-0  18625-3 0  9997
+2 25544  51.6429 276.5414 0005726  50.9620 309.1869 15.50020164421882`;
+    
     try {
         const res = await fetch('https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=tle');
         if(res.ok) {
@@ -118,10 +123,14 @@ async function fetchISSTle() {
             const lines = data.split('\n');
             if(lines.length >= 3 && window.satellite) {
                 issSatRec = satellite.twoline2satrec(lines[1].trim(), lines[2].trim());
+                return;
             }
         }
+        throw new Error('Fallback trigger');
     } catch (e) {
-        console.log('[TLE] Failed. math fallback runs.');
+        console.log('[TLE] Network or parse failed. Injecting robust static fallback TLE.');
+        const lines = staticIssTLE.split('\n');
+        issSatRec = satellite.twoline2satrec(lines[1].trim(), lines[2].trim());
     }
 }
 
@@ -133,11 +142,14 @@ function init3DScene() {
     Object.values(layers).forEach(group => scene.add(group));
     createStarfield();
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // FIXED: Added logarithmicDepthBuffer to resolve Z-fighting
+    renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // FIXED: Ensured direct Canvas DOM object blocks touch-action panning scrolling
+    renderer.domElement.style.touchAction = 'none';
     document.body.appendChild(renderer.domElement);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 40000);
@@ -159,6 +171,7 @@ function init3DScene() {
     sunMesh = new THREE.Mesh(sunGeo, sunMat);
     sunMesh.userData = { nameEn: 'Sun', nameKo: '태양', temp: '5,500°C', rotPeriod: '27일' };
     scene.add(sunMesh);
+    interactiveMeshes.push(sunMesh); // ONLY push interactable meshes
 
     Object.keys(planetsData).forEach(name => {
         let data = planetsData[name];
@@ -181,6 +194,7 @@ function init3DScene() {
         };
 
         layers[data.layer].add(mesh);
+        interactiveMeshes.push(mesh); // STRICT Raycaster whitelist
         planetMeshes[name] = mesh;
 
         if (data.hasRings) {
@@ -202,6 +216,7 @@ function init3DScene() {
                 mMesh.userData = { nameEn: 'Moon', nameKo: moon.nameKo, temp: moon.temp, rotPeriod: moon.rotPeriod };
                 
                 layers.moons.add(mMesh);
+                interactiveMeshes.push(mMesh); // STRICT Raycaster whitelist
                 mesh.userData.moonMeshes.push(mMesh);
                 drawMoonOrbitLine(moon, mesh);
             });
@@ -215,6 +230,7 @@ function init3DScene() {
         let mesh = new THREE.Mesh(geo, mat);
         mesh.userData = { nameEn: mission.id, nameKo: mission.nameKo, temp: 'N/A', rotPeriod: 'N/A' };
         layers.spacecraft.add(mesh);
+        interactiveMeshes.push(mesh); // STRICT Raycaster whitelist
         mission.meshRef = mesh;
     });
 
@@ -227,9 +243,9 @@ function init3DScene() {
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
     window.addEventListener('resize', onWindowResize);
-    // Raycaster listener
+    // Raycaster listeners
+    renderer.domElement.addEventListener('pointerdown', onPointerMove);
     renderer.domElement.addEventListener('pointermove', onPointerMove);
-    renderer.domElement.addEventListener('click', onPointerMove); // Mobile tap triggers tooltip securely
 }
 
 function createStarfield() {
@@ -253,6 +269,7 @@ function drawOrbitPath(name, data) {
 
     const orbitLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material);
     if (data.isComet || data.isArtificial) orbitLine.computeLineDistances();
+    // Do NOT push OrbitLine to interactiveMeshes arrays
     layers.orbits.add(orbitLine);
 }
 function drawMoonOrbitLine(moonObj, parentMesh) {
@@ -267,7 +284,7 @@ function drawMoonOrbitLine(moonObj, parentMesh) {
     parentMesh.add(line);
 }
 
-// --- UI Binding (Unified Logic) --- //
+// --- UI Logic --- //
 function setupUI() {
     const btnPaw = document.getElementById('btn-pause');
     const btnRew = document.getElementById('btn-rewind');
@@ -292,11 +309,16 @@ function setupUI() {
 
     const handleDate = (e) => {
         const parsed = new Date(e.target.value);
-        if (!isNaN(parsed.getTime())) simulationDate = parsed;
+        // FIXED: NaN Prevention via Strict Validation
+        if (!isNaN(parsed.getTime())) {
+            simulationDate = parsed;
+        } else {
+            // Revert safely to current simulation bounds if typed absurdly
+            e.target.value = simulationDate.toISOString().split('T')[0];
+        }
     };
     document.getElementById('date-picker')?.addEventListener('change', handleDate);
 
-    // Timeline Header Toggle wrapper
     const tlBtn = document.getElementById('toggle-timeline');
     const tlPanel = document.getElementById('timeline-panel');
     tlBtn?.addEventListener('click', () => {
@@ -304,7 +326,6 @@ function setupUI() {
         tlBtn.textContent = tlPanel.classList.contains('collapsed') ? '▲' : '▼';
     });
 
-    // Layer Checkboxes Check
     const checks = {
         'toggle-orbits': 'orbits', 'toggle-moons': 'moons', 
         'toggle-planets': 'planets', 'toggle-spacecraft': 'spacecraft', 'toggle-iss': 'iss'
@@ -321,7 +342,6 @@ function setupUI() {
         Object.values(planetMeshes).forEach(mesh => mesh.scale.set(PLANET_SCALE/1.5, PLANET_SCALE/1.5, PLANET_SCALE/1.5));
     });
 
-    // Filters binding
     document.getElementById('filter-natural')?.addEventListener('change', renderTimeline);
     document.getElementById('filter-human')?.addEventListener('change', renderTimeline);
 }
@@ -330,12 +350,11 @@ function updateSpeedLabel() {
     document.querySelector('.speed-label').textContent = `x${speedArray[currentSpeedIndex]}`;
 }
 
-// Render dynamic filtered lists without translateY
 function renderTimeline() {
     masterTimeline.sort((a,b) => new Date(a.date) - new Date(b.date));
     const list = document.getElementById('events-list');
     if(!list) return;
-    list.innerHTML = ''; // clear
+    list.innerHTML = ''; 
 
     const showNat = document.getElementById('filter-natural')?.checked;
     const showHum = document.getElementById('filter-human')?.checked;
@@ -364,18 +383,15 @@ function focusCameraOnEvent(event) {
     
     let targetObj = planetMeshes[event.targetSystem];
     if(event.targetSystem === 'Sun') targetObj = sunMesh;
-    // Find spacecraft meshes easily
     if(!targetObj) targetObj = spacecraftMissions.find(m => m.id === event.targetSystem)?.meshRef;
     if(!targetObj) return;
 
-    // Use current mesh world pos + offset
     const targetPos = new THREE.Vector3();
     targetObj.getWorldPosition(targetPos);
 
     let baseDist = (targetObj.geometry && targetObj.geometry.boundingSphere) ? targetObj.geometry.boundingSphere.radius * targetObj.scale.x : 5;
     let cameraOffset = new THREE.Vector3(targetPos.x + baseDist * 4, Math.max(10, targetPos.y + baseDist * 2), targetPos.z + baseDist * 5);
 
-    // TWEEN Setup
     new TWEEN.Tween(camera.position).to(cameraOffset, 2000).easing(TWEEN.Easing.Cubic.InOut).start();
     new TWEEN.Tween(controls.target).to(targetPos, 2000).easing(TWEEN.Easing.Cubic.InOut).start();
 }
@@ -386,31 +402,33 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Raycasting sets the "active tracking target" for the animate loop to follow 2D
+// FIXED: Exact bounding client rect constraints and strict array checking
 function onPointerMove(event) {
-    // Standardize pointer
-    let clientX = event.clientX; let clientY = event.clientY;
+    if(!renderer || !renderer.domElement) return;
+
+    let targetClientX = event.clientX; 
+    let targetClientY = event.clientY;
     if(event.changedTouches && event.changedTouches.length>0) {
-        clientX = event.changedTouches[0].clientX; clientY = event.changedTouches[0].clientY;
+        targetClientX = event.changedTouches[0].clientX; 
+        targetClientY = event.changedTouches[0].clientY;
     }
 
-    mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ( ( targetClientX - rect.left ) / rect.width ) * 2 - 1;
+    mouse.y = - ( ( targetClientY - rect.top ) / rect.height ) * 2 + 1;
+
     raycaster.setFromCamera(mouse, camera);
     
-    let interactables = [];
-    Object.values(layers).forEach(layer => { if(layer.visible) interactables.push(...layer.children); });
-    interactables.push(sunMesh);
-
-    const intersects = raycaster.intersectObjects(interactables, false);
+    // STRICT FIX: Apply raycasting ONLY to the explicitly registered meshes (no orbit lines/lights)
+    const intersects = raycaster.intersectObjects(interactiveMeshes, false);
 
     if (intersects.length > 0) {
-        // Find uppermost mesh logic logic (exclude rings)
-        let hit = intersects.find(hit => hit.object.geometry.type !== 'RingGeometry');
+        // Safe check for actual visibility 
+        let hit = intersects.find(hit => hit.object.visible);
         if(hit) {
             document.body.style.cursor = 'pointer';
             activeTooltipObject = hit.object; 
-            // Paint data
+            
             let data = activeTooltipObject.userData;
             document.getElementById('tt-name-en').textContent = data.nameEn || '';
             document.getElementById('tt-name-ko').textContent = data.nameKo || '';
@@ -533,21 +551,19 @@ function animate(time) {
 
     sunMesh.rotation.y += 0.005;
 
-    // 2D Projection Magic for Tooltips
     if (activeTooltipObject) {
         let vec = new THREE.Vector3();
         activeTooltipObject.getWorldPosition(vec);
-        vec.project(camera); // maps 3D to 2D normalized range (-1 to 1)
+        vec.project(camera); 
 
         const tooltip = document.getElementById('hover-tooltip');
-        // Hide if behind camera
-        if (vec.z > 1.0) {
-            tooltip.style.opacity = '0';
+        // Hide if behind camera or object itself is hidden via layers toggle
+        if (vec.z > 1.0 || !activeTooltipObject.visible) {
+            tooltip.classList.add('hidden');
         } else {
-            tooltip.style.opacity = '1';
+            tooltip.classList.remove('hidden');
             let x = (vec.x *  .5 + .5) * window.innerWidth;
             let y = (vec.y * -.5 + .5) * window.innerHeight;
-            // offset slightly
             tooltip.style.transform = `translate(${x + 20}px, ${y - 20}px)`;
         }
     }
