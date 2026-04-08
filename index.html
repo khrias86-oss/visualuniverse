@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Visual Universe (Resposive & HD)</title>
+    <title>Visual Universe (NASA Eyes UX)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     
-    <!-- Top Left UI: Date Display & Layer Toggles -->
-    <div id="top-left-panel">
-        <div id="date-display">Simulation Time<br><span id="current-date"></span></div>
-        <hr class="panel-divider">
-        <div id="layer-toggles">
-            <h4 class="toggles-header">가시성 제어 (Layers)</h4>
+    <!-- Top Left UI: Compact Hover Dropdown for Layers -->
+    <div id="top-left-panel" class="glass-panel layer-dropdown">
+        <div class="dropdown-header">
+            <span class="icon">👁️</span> 레이어 제어
+        </div>
+        <div class="dropdown-content">
             <label class="toggle-control"><input type="checkbox" id="toggle-orbits" checked> <span>궤적 (Orbits)</span></label>
             <label class="toggle-control"><input type="checkbox" id="toggle-moons" checked> <span>작은 위성 (Moons)</span></label>
             <label class="toggle-control"><input type="checkbox" id="toggle-planets" checked> <span>주요 행성 (Planets)</span></label>
@@ -24,88 +24,48 @@
         </div>
     </div>
 
-    <!-- Center Bottom Controls (Desktop / Landscape Tablet) -->
-    <div id="bottom-panel" class="desktop-only">
-        <div id="time-controls" class="controls-panel">
-            <div class="panel-title">물리 엔진 (Time Control)</div>
-            <div class="controls">
-                <button id="btn-pause">⏸</button>
-                <div class="speed-slider-container">
-                    <span class="speed-label">속도: x1</span>
-                    <button id="btn-rewind" title="Decrease Speed">«</button>
-                    <button id="btn-fastforward" title="Increase Speed">»</button>
-                </div>
-            </div>
-        </div>
-        <div id="date-input-container" class="controls-panel">
-            <div class="panel-title">날짜 도약 (Leap)</div>
-            <input type="date" id="date-picker">
-        </div>
-    </div>
-    
-    <!-- Timeline & Events HUD on Top Right -->
-    <div id="timeline-panel" class="collapsible">
+    <!-- Timeline & Events HUD on Top Right with Filters -->
+    <div id="timeline-panel" class="glass-panel collapsible">
         <div class="timeline-header">
-            천문 이벤트 (Timeline)
+            우주 연대기 (Timeline)
             <button class="toggle-collapse-btn" id="toggle-timeline">▼</button>
+        </div>
+        <div class="timeline-filters">
+            <label><input type="checkbox" id="filter-natural" checked> 천문 현상</label>
+            <label><input type="checkbox" id="filter-human" checked> 인류 우주항공</label>
         </div>
         <div id="events-container">
             <div id="events-list">
                 <!-- Events injected dynamically by JS -->
             </div>
             <div id="current-time-marker">
-                <span class="marker-text">현재(Current)</span> <span class="marker-arrow">➜</span>
+                <span class="marker-text">현재 시간</span> <span class="marker-arrow">➜</span>
             </div>
         </div>
     </div>
 
-    <!-- Event Click Modal -->
-    <div id="event-popup" class="hidden">
-        <img id="event-popup-img" src="" alt="Event visual">
-        <div class="popup-content">
-            <h4 id="event-popup-title">Title</h4>
-            <div id="event-popup-desc">Description</div>
-        </div>
-    </div>
-
-    <!-- Hover Tooltip (Raycasting Linked) -->
-    <div id="hover-tooltip" class="hidden">
-        <h3 id="tt-name-en">Earth</h3>
-        <h4 id="tt-name-ko">지구</h4>
+    <!-- 3D Projected Tooltip -->
+    <div id="hover-tooltip" class="glass-panel hidden">
+        <h3 id="tt-name-en">Planet</h3>
+        <h4 id="tt-name-ko">행성</h4>
         <div class="tt-metric"><span>표면 온도:</span> <span id="tt-temp">-</span></div>
         <div class="tt-metric"><span>공전 주기:</span> <span id="tt-period">-</span></div>
         <div class="tt-metric"><span>자전 주기:</span> <span id="tt-rotation">-</span></div>
-        <div id="tt-extra-desc" style="display:none; color:#38bdf8; font-size:0.75rem; margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;"></div>
     </div>
 
-    <!-- MOBILE ENHANCEMENTS -->
-    <button id="mobile-fab" class="mobile-only">🕒</button>
-    <div id="mobile-controls-modal" class="hidden modal-overlay">
-        <div class="modal-content">
-            <h3>시간 통제 모듈</h3>
-            <div class="controls stack">
-                <div class="speed-slider-container mobile-stack-flex">
-                    <button id="mob-btn-rewind">«</button>
-                    <button id="mob-btn-pause">⏸</button>
-                    <button id="mob-btn-fastforward">»</button>
-                </div>
-                <div class="modal-speed-display"><span class="speed-label mob-speed-label">속도: x1</span></div>
-                <hr class="modal-divider">
-                <h3 style="margin-top:0;">날짜 변경</h3>
-                <input type="date" id="mob-date-picker" class="modal-input">
+    <!-- UNIFIED Bottom Control Bar (NASA Eyes Style, Responsive for all) -->
+    <div id="unified-bottom-bar" class="glass-panel">
+        <div class="bottom-bar-content">
+            <div id="date-display"><span id="current-date"></span></div>
+            <input type="date" id="date-picker">
+            <div class="divider-vertical"></div>
+            <div class="controls-playback">
+                <button id="btn-rewind" title="Decrease Speed">«</button>
+                <button id="btn-pause">⏸</button>
+                <button id="btn-fastforward" title="Increase Speed">»</button>
             </div>
-            <button id="close-mobile-modal" class="modal-primary-btn">확인 (Done)</button>
-        </div>
-    </div>
-
-    <!-- Legacy Info Panel fallback -->
-    <div id="planet-info" class="hidden bottom-sheet">
-        <div class="drag-handle mobile-only"></div>
-        <div class="close-btn" id="close-info">&times;</div>
-        <h2 id="info-name">Planet Name</h2>
-        <div class="info-content-wrap">
-            <p><strong>거리 (Sun Dist):</strong> <span id="info-distance"></span> AU</p>
-            <p><strong>반경 (Radius):</strong> <span id="info-radius"></span> Earth radii</p>
+            <div class="divider-vertical"></div>
+            <div class="speed-indicator"><span class="speed-label">x1</span></div>
         </div>
     </div>
 

@@ -3,7 +3,7 @@
 body {
     margin: 0;
     overflow: hidden; 
-    background-color: #030305; /* Deeper black for realistic space */
+    background-color: #000002; /* Space Void */
     font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
     color: #e2e8f0;
     user-select: none;
@@ -17,97 +17,180 @@ canvas {
     touch-action: none !important;
 }
 
-/* Glassmorphism Classes */
-.glass-panel, #top-left-panel, .controls-panel, #timeline-panel, .modal-content, #planet-info:not(.bottom-sheet), #hover-tooltip {
-    background: rgba(12, 16, 26, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.panel-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    text-align: center;
+/* Glassmorphism Panels - "NASA Eyes" NASA-like minimalist dark overlays */
+.glass-panel {
+    background: rgba(8, 12, 18, 0.5); /* Extreame transparency */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* thin, sharp boundaries */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 8px;
+    box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.8);
 }
 
 .panel-divider {
     border: 0;
     height: 1px;
     background: rgba(255,255,255,0.1);
-    margin: 12px 0;
+    margin: 10px 0;
+}
+.divider-vertical {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.1);
+    margin: 0 10px;
 }
 
-/* Top Left UI (Date & Toggles) */
-#top-left-panel {
+/* 1. Top Left Layer Dropdown */
+.layer-dropdown {
     position: absolute;
     top: 20px;
     left: 20px;
-    padding: 15px 20px;
-    z-index: 10;
-    min-width: 200px;
+    width: 140px;
+    height: 40px;
+    overflow: hidden;
+    z-index: 20;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-#date-display {
-    font-size: 0.8rem;
-    color: #64748b;
-    line-height: 1.4;
+.layer-dropdown:hover {
+    width: 220px;
+    height: 260px; /* Expand on hover */
+    background: rgba(8, 12, 18, 0.85);
 }
 
-#date-display span {
-    font-size: 1.1rem;
+.dropdown-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: #38bdf8;
-    display: block;
-    margin-top: 2px;
+    color: #cbd5e1;
+    cursor: default;
 }
 
-.toggles-header {
-    margin: 0 0 10px 0;
-    font-size: 0.85rem;
-    color: #cbd5e1;
+.dropdown-header .icon {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.dropdown-content {
+    padding: 10px 15px;
+    opacity: 0;
+    transition: opacity 0.2s 0.1s;
+}
+
+.layer-dropdown:hover .dropdown-content {
+    opacity: 1;
 }
 
 .toggle-control {
     display: flex;
     align-items: center;
-    font-size: 0.8rem;
-    margin-bottom: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
     cursor: pointer;
     color: #94a3b8;
     transition: color 0.2s;
 }
 
-.toggle-control:hover {
-    color: #e2e8f0;
+.toggle-control:hover { color: #fff; }
+.toggle-control input { margin-right: 8px; cursor: pointer; }
+.scale-toggle .warning-txt { color: #ec4899; font-weight: 600; }
+
+/* 2. Unified Bottom Control Bar */
+#unified-bottom-bar {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    min-width: 380px;
 }
 
-.toggle-control input {
-    margin-right: 8px;
-    cursor: pointer;
+.bottom-bar-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
-.scale-toggle .warning-txt {
-    color: #f43f5e; /* Red-ish for realistic warning */
+#date-display {
+    font-size: 1rem;
     font-weight: 600;
+    color: #38bdf8;
+    margin-right: 15px;
 }
 
-/* New Holographic Tooltip (Mouse Tracking) */
+input[type="date"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color-scheme: dark;
+    outline: none;
+}
+
+.controls-playback {
+    display: flex;
+    gap: 8px;
+}
+
+button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    width: 40px; height: 35px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center;
+}
+
+button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+button:active {
+    transform: scale(0.92);
+}
+
+button.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+}
+
+.speed-indicator {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* 3. 3D Projected Hover Tooltip */
 #hover-tooltip {
     position: absolute;
-    top: -1000px; left: -1000px; /* Hidden initially safely */
-    width: 220px;
+    top: 0; left: 0;
+    width: 200px;
     padding: 15px;
-    pointer-events: none; /* Let clicks pass through to raycaster */
-    z-index: 100;
-    transition: opacity 0.15s ease;
-    border-left: 3px solid #38bdf8;
+    /* Very Important: Don't steal pointer events from canvas */
+    pointer-events: none; 
+    z-index: 30;
+    /* Smooth 2D translation following 3D object */
+    will-change: transform, opacity;
+    border-left: 2px solid #38bdf8;
+    opacity: 0; 
+    transition: opacity 0.2s ease;
 }
 
 #hover-tooltip.hidden {
@@ -115,309 +198,131 @@ canvas {
 }
 
 #tt-name-en {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    margin: 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;
 }
 
 #tt-name-ko {
-    margin: 2px 0 12px 0;
-    font-size: 1.5rem;
-    color: #e2e8f0;
+    margin: 2px 0 10px 0; font-size: 1.4rem; color: #fff;
 }
 
 .tt-metric {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: #cbd5e1;
-    margin-bottom: 4px;
+    display: flex; justify-content: space-between; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 5px;
+}
+.tt-metric span:last-child {
+    font-weight: 600; color: #f8fafc;
 }
 
-/* Desktop Center Bottom Control Panel */
-#bottom-panel {
-    position: absolute;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 12px;
-    z-index: 10;
-    transition: all 0.3s;
-}
-
-.controls-panel {
-    padding: 10px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.controls {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.speed-slider-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,0,0,0.3);
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-
-.speed-label {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 600;
-    min-width: 110px;
-    text-align: right;
-    margin-right: 5px;
-}
-
-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #e2e8f0;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-button:active {
-    transform: scale(0.95);
-}
-
-button.active, .toggle-collapse-btn:active {
-    background: rgba(56, 189, 248, 0.2);
-    border-color: rgba(56, 189, 248, 0.5);
-    color: #38bdf8;
-}
-
-input[type="date"] {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    outline: none;
-    color-scheme: dark;
-}
-
-/* Timeline Panel */
+/* 4. Timeline Panel & Custom Scroll */
 #timeline-panel {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 280px;
-    height: 60vh;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
-    z-index: 10;
+    top: 20px; right: 20px;
+    width: 320px;
+    height: 70vh; /* Taller */
+    display: flex; flex-direction: column;
+    padding: 0; z-index: 10;
     transition: max-height 0.3s ease;
 }
 
 #timeline-panel.collapsed {
-    max-height: 50px; 
+    max-height: 45px; overflow: hidden;
 }
 
 .timeline-header {
-    padding: 15px 20px;
-    background: rgba(15, 23, 42, 0.9);
+    height: 45px;
+    padding: 0 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(15, 23, 42, 0.4);
+    font-size: 0.95rem; font-weight: 600; color: #e2e8f0;
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-weight: 600;
-    color: #e2e8f0;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .toggle-collapse-btn {
-    padding: 4px 8px;
-    font-size: 0.7rem;
-    background: transparent;
-    border: none;
+    width: 30px; height: 30px; font-size: 0.7rem; background: transparent; border: none; padding: 0; margin: 0;
 }
+
+.timeline-filters {
+    padding: 10px 20px;
+    display: flex; gap: 15px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.8rem; color: #94a3b8;
+}
+
+.timeline-filters label {
+    cursor: pointer; display: flex; align-items: center;
+}
+.timeline-filters input { margin-right: 5px; cursor: pointer; }
 
 #events-container {
-    position: relative;
     flex-grow: 1;
-    overflow: hidden;
+    position: relative;
+    /* Manual scrollbar implementation */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    padding-bottom: 30px;
 }
 
+/* Slim Custom Scrollbar */
+#events-container::-webkit-scrollbar { width: 6px; }
+#events-container::-webkit-scrollbar-track { background: transparent; }
+#events-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+#events-container::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
 #events-list {
-    position: absolute;
     width: 100%;
-    /* No css transition on transform here when dragging or clicking? We keep it for smooth auto scroll */
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
 }
 
 .event-card {
-    padding: 12px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 12px 20px 12px 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
     cursor: pointer;
-    transition: background 0.2s;
-    height: 65px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    transition: background 0.15s;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
 }
 
-.event-card:hover, .event-card:active {
-    background: rgba(255,255,255,0.08);
+/* Category Markers */
+.event-card::before {
+    content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 6px; border-radius: 50%;
 }
+.event-card[data-type="natural"]::before { background: #38bdf8; box-shadow: 0 0 5px #38bdf8; }
+.event-card[data-type="human"]::before { background: #ec4899; box-shadow: 0 0 5px #ec4899; }
 
-.event-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #cbd5e1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.event-card:hover { background: rgba(255,255,255,0.08); }
 
-.event-date {
-    font-size: 0.75rem;
-    color: #64748b;
-    margin-top: 4px;
-}
+.event-title { font-size: 0.85rem; font-weight: 600; color: #e2e8f0; }
+.event-date { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
 
+/* We hide the current time marker since real overflow-y logic handles position */
 #current-time-marker {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #38bdf8;
-    z-index: 5;
-    pointer-events: none;
-    box-shadow: 0 0 10px #38bdf8;
+    display: none; 
 }
 
-#current-time-marker .marker-text {
-    position: absolute;
-    right: 30px;
-    top: -20px;
-    color: #38bdf8;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
 
-#current-time-marker .marker-arrow {
-    position: absolute;
-    right: 10px;
-    top: -12px;
-    color: #38bdf8;
-}
-
-/* Legacy Modals, FABs, and Popups from previous integration */
-.desktop-only { display: flex; }
-.mobile-only { display: none !important; }
-.hidden { display: none !important; }
-
-@media (max-width: 1024px) {
-    #bottom-panel {
-        bottom: 15px;
-        transform: translateX(-50%) scale(0.9);
-    }
-    #timeline-panel {
-        width: 240px;
-        height: 50vh;
-    }
-}
-
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
 @media (max-width: 768px) {
-    .mobile-only { display: flex !important; }
-    .desktop-only { display: none !important; }
-    
-    #top-left-panel {
-        top: 10px; left: 10px;
+    #unified-bottom-bar {
+        bottom: 10px;
+        min-width: 90vw;
         padding: 10px 15px;
-        transform: scale(0.85); /* shrink a bit for mobile */
-        transform-origin: top left;
     }
-
-    #timeline-panel {
-        top: 10px;
-        right: 10px;
-        width: 200px;
-        height: 40vh;
-    }
-    #timeline-panel.collapsed { max-height: 40px; }
-
-    #mobile-fab {
-        position: absolute;
-        bottom: 25px;
-        right: 25px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #38bdf8;
-        color: #fff;
-        font-size: 1.8rem;
-        box-shadow: 0 4px 20px rgba(56, 189, 248, 0.6);
-        z-index: 50;
-        border: none;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(5px);
-        z-index: 60;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .modal-content {
-        background: rgba(18,22,33, 0.95);
-        padding: 25px;
-        width: 80%;
-        max-width: 320px;
-        border-radius: 20px;
-    }
-
-    .mobile-stack-flex {
-        width: 100%;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        background: transparent;
-        border: none;
-    }
-
-    .mobile-stack-flex button {
-        flex: 1;
-        margin: 0 5px;
-        padding: 15px 0;
-        font-size: 1.2rem;
-    }
-
-    .modal-speed-display { text-align: center; margin-bottom: 15px; }
-    .mob-speed-label { color: #38bdf8; }
-    .modal-input { width: 100%; box-sizing: border-box; margin-bottom: 20px; }
-    .modal-primary-btn { width: 100%; background: #38bdf8; color: #000; padding: 12px; border: none; }
+    
+    .bottom-bar-content { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    
+    #date-display { font-size: 0.9rem; margin-right: 0; }
+    .divider-vertical { display: none; }
+    input[type="date"] { font-size: 0.8rem; width: 110px; }
+    button { width: 35px; height: 35px; }
+    
+    #timeline-panel { width: 220px; height: 45vh; }
+    
+    .layer-dropdown { top: 10px; left: 10px; width: 40px; }
+    .layer-dropdown .dropdown-header { padding: 0 10px; color: transparent; } /* hide text */
+    .layer-dropdown .dropdown-header .icon { margin-left: 0; font-size: 1.3rem; }
+    
+    .layer-dropdown:hover { width: 180px; height: 260px; }
+    .layer-dropdown:hover .dropdown-header { color: #cbd5e1; }
 }
