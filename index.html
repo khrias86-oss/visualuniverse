@@ -1,38 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport must be rigid for web apps handling their own touch gestures -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Visual Universe (Resposive)</title>
+    <title>Visual Universe (Resposive & HD)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     
-    <!-- Top Left HUD keeps the same for Desktop/Tablet, but scales down for Mobile -->
-    <div id="hud-top-left">
+    <!-- Top Left UI: Date Display & Layer Toggles -->
+    <div id="top-left-panel">
         <div id="date-display">Simulation Time<br><span id="current-date"></span></div>
+        <hr class="panel-divider">
+        <div id="layer-toggles">
+            <h4 class="toggles-header">가시성 제어 (Layers)</h4>
+            <label class="toggle-control"><input type="checkbox" id="toggle-orbits" checked> <span>궤적 (Orbits)</span></label>
+            <label class="toggle-control"><input type="checkbox" id="toggle-moons" checked> <span>작은 위성 (Moons)</span></label>
+            <label class="toggle-control"><input type="checkbox" id="toggle-planets" checked> <span>주요 행성 (Planets)</span></label>
+            <label class="toggle-control"><input type="checkbox" id="toggle-spacecraft" checked> <span>인류 탐사선 (Spacecrafts)</span></label>
+            <label class="toggle-control"><input type="checkbox" id="toggle-iss" checked> <span>우주정거장 (ISS)</span></label>
+            <hr class="panel-divider">
+            <label class="toggle-control scale-toggle"><input type="checkbox" id="toggle-real-scale"> <span class="warning-txt">현실 비율 (Real Scale)</span></label>
+        </div>
     </div>
 
-    <!-- Center Bottom Controls (Desktop & Landscape Tablet) -->
+    <!-- Center Bottom Controls (Desktop / Landscape Tablet) -->
     <div id="bottom-panel" class="desktop-only">
         <div id="time-controls" class="controls-panel">
-            <div class="panel-title">Time Control Panel</div>
+            <div class="panel-title">물리 엔진 (Time Control)</div>
             <div class="controls">
                 <button id="btn-pause">⏸</button>
                 <div class="speed-slider-container">
-                    <span class="speed-label">Speed Normal</span>
-                    <button id="btn-rewind" title="Rewind">«</button>
-                    <button id="btn-fastforward" title="Fast Forward">»</button>
-                    <button id="btn-1x" class="hidden">1x</button>
-                    <button id="btn-10x" class="hidden">10x</button>
-                    <button id="btn-100x" class="hidden">100x</button>
-                    <button id="btn-1000x" class="hidden">1000x</button>
+                    <span class="speed-label">속도: x1</span>
+                    <button id="btn-rewind" title="Decrease Speed">«</button>
+                    <button id="btn-fastforward" title="Increase Speed">»</button>
                 </div>
             </div>
         </div>
         <div id="date-input-container" class="controls-panel">
-            <div class="panel-title">Date</div>
+            <div class="panel-title">날짜 도약 (Leap)</div>
             <input type="date" id="date-picker">
         </div>
     </div>
@@ -40,20 +46,20 @@
     <!-- Timeline & Events HUD on Top Right -->
     <div id="timeline-panel" class="collapsible">
         <div class="timeline-header">
-            Timeline & Events
+            천문 이벤트 (Timeline)
             <button class="toggle-collapse-btn" id="toggle-timeline">▼</button>
         </div>
         <div id="events-container">
             <div id="events-list">
-                <!-- Events injected by JS -->
+                <!-- Events injected dynamically by JS -->
             </div>
             <div id="current-time-marker">
-                <span class="marker-text">Current</span> <span class="marker-arrow">➜</span>
+                <span class="marker-text">현재(Current)</span> <span class="marker-arrow">➜</span>
             </div>
         </div>
     </div>
 
-    <!-- Hover details popup for Events (Desktop relies on hover, Mobile relies on tap to modal) -->
+    <!-- Event Click Modal -->
     <div id="event-popup" class="hidden">
         <img id="event-popup-img" src="" alt="Event visual">
         <div class="popup-content">
@@ -62,48 +68,54 @@
         </div>
     </div>
 
-    <!-- Information Data Panel (Works as absolute window on Desktop, Swipe-up sheet on Mobile) -->
-    <div id="planet-info" class="hidden bottom-sheet">
-        <div class="drag-handle mobile-only"></div>
-        <div class="close-btn" id="close-info">&times;</div>
-        <h2 id="info-name">Planet Name</h2>
-        <div class="info-content-wrap">
-            <p><strong>Distance from Sun:</strong> <span id="info-distance"></span> AU</p>
-            <p><strong>Radius:</strong> <span id="info-radius"></span> Earth radii</p>
-            <p><strong>Orbital Period:</strong> <span id="info-period"></span> days</p>
-        </div>
+    <!-- Hover Tooltip (Raycasting Linked) -->
+    <div id="hover-tooltip" class="hidden">
+        <h3 id="tt-name-en">Earth</h3>
+        <h4 id="tt-name-ko">지구</h4>
+        <div class="tt-metric"><span>표면 온도:</span> <span id="tt-temp">-</span></div>
+        <div class="tt-metric"><span>공전 주기:</span> <span id="tt-period">-</span></div>
+        <div class="tt-metric"><span>자전 주기:</span> <span id="tt-rotation">-</span></div>
+        <div id="tt-extra-desc" style="display:none; color:#38bdf8; font-size:0.75rem; margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;"></div>
     </div>
 
     <!-- MOBILE ENHANCEMENTS -->
-    <!-- Floating Action Button (Mobile Portrait Only) -->
     <button id="mobile-fab" class="mobile-only">🕒</button>
-    
-    <!-- Mobile Controls Modal Overlay -->
     <div id="mobile-controls-modal" class="hidden modal-overlay">
         <div class="modal-content">
-            <h3>Time Controls</h3>
+            <h3>시간 통제 모듈</h3>
             <div class="controls stack">
                 <div class="speed-slider-container mobile-stack-flex">
                     <button id="mob-btn-rewind">«</button>
                     <button id="mob-btn-pause">⏸</button>
                     <button id="mob-btn-fastforward">»</button>
                 </div>
-                <div class="modal-speed-display"><span class="speed-label mob-speed-label">Speed Normal</span></div>
-                
+                <div class="modal-speed-display"><span class="speed-label mob-speed-label">속도: x1</span></div>
                 <hr class="modal-divider">
-                
-                <h3 style="margin-top:0;">Leap to Date</h3>
+                <h3 style="margin-top:0;">날짜 변경</h3>
                 <input type="date" id="mob-date-picker" class="modal-input">
             </div>
-            <button id="close-mobile-modal" class="modal-primary-btn">Done</button>
+            <button id="close-mobile-modal" class="modal-primary-btn">확인 (Done)</button>
         </div>
     </div>
 
-    <!-- Include Three.js -->
+    <!-- Legacy Info Panel fallback -->
+    <div id="planet-info" class="hidden bottom-sheet">
+        <div class="drag-handle mobile-only"></div>
+        <div class="close-btn" id="close-info">&times;</div>
+        <h2 id="info-name">Planet Name</h2>
+        <div class="info-content-wrap">
+            <p><strong>거리 (Sun Dist):</strong> <span id="info-distance"></span> AU</p>
+            <p><strong>반경 (Radius):</strong> <span id="info-radius"></span> Earth radii</p>
+        </div>
+    </div>
+
+    <!-- JS Dependencies: Three.js, OrbitControls, Tween.js, Satellite.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/5.0.0/satellite.min.js"></script>
     
-    <!-- Include Custom JS -->
+    <!-- Main Application Logic -->
     <script src="script.js"></script>
 </body>
 </html>
